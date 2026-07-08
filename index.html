@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<script>document.documentElement.classList.add('js')</script>
+<title>Aperture Lab — develop light, not files</title>
+<meta name="description" content="Aperture Lab is a computational-photography RAW editor. A neural develop engine reads the light in every frame and grades it the way you would — in one move. Drag to compare RAW and developed." />
+<meta name="theme-color" content="#0a0a0b" />
+<meta property="og:title" content="Aperture Lab — develop light, not files" />
+<meta property="og:description" content="A computational-photography RAW editor. Drag to compare RAW and developed." />
+<meta name="color-scheme" content="dark" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,900&family=Inter+Tight:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+<canvas class="grain" aria-hidden="true"></canvas>
+<div class="vignette" aria-hidden="true"></div>
+
+<header class="nav">
+  <a class="brand" href="./" aria-label="Aperture Lab home">
+    <span class="brand-mark" aria-hidden="true"></span>
+    <span class="brand-word">Aperture&nbsp;Lab</span>
+  </a>
+  <nav class="nav-links" aria-label="Primary">
+    <a href="#develop">Develop</a>
+    <a href="#engine">Engine</a>
+    <a href="#looks">Looks</a>
+    <a href="./guide/">Guide</a>
+    <a class="nav-cta" href="#develop">Open the darkroom</a>
+  </nav>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="hero-copy">
+      <p class="eyebrow reveal">Computational photography · RAW develop engine</p>
+      <h1 class="hero-title">
+        <span class="line"><span>Develop light,</span></span>
+        <span class="line"><span><em>not files.</em></span></span>
+      </h1>
+      <p class="hero-sub reveal">Aperture Lab reads the physics of every exposure — the roll-off of a
+        highlight, the color of the shadow it fell into — and grades the frame the way you would.
+        In one move, not forty sliders. Drag the seam to see a RAW capture become a finished photograph.</p>
+      <div class="hero-actions reveal">
+        <a class="btn btn-primary" href="#develop">Try the develop panel</a>
+        <a class="btn btn-ghost" href="#engine">How the engine sees →</a>
+      </div>
+    </div>
+
+    <figure class="compare reveal" aria-label="Before and after: RAW capture versus developed frame. Drag the handle to compare.">
+      <div class="compare-stage" id="compare">
+        <img class="compare-img compare-dev" src="./assets/frame.jpg" alt="A woman at a rain-streaked window in warm afternoon light — the developed, color-graded frame." decoding="async" />
+        <div class="compare-raw" aria-hidden="true">
+          <img class="compare-img" src="./assets/frame.jpg" alt="" decoding="async" />
+        </div>
+        <span class="tag tag-raw" aria-hidden="true">RAW</span>
+        <span class="tag tag-dev" aria-hidden="true">DEVELOPED</span>
+        <button class="compare-handle" id="handle" type="button" aria-label="Comparison slider position" role="slider" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" aria-orientation="horizontal">
+          <span class="handle-line" aria-hidden="true"></span>
+          <span class="handle-grip" aria-hidden="true"></span>
+        </button>
+      </div>
+      <figcaption class="compare-meta">
+        <span>ƒ/1.8</span><span>1/200s</span><span>ISO 400</span><span>48.2 MP</span><span class="compare-hint">drag to compare</span>
+      </figcaption>
+    </figure>
+  </section>
+
+  <section id="develop" class="develop">
+    <div class="section-head">
+      <p class="kicker reveal">[ The develop panel ]</p>
+      <h2 class="reveal">One frame. Every slider live.</h2>
+      <p class="lede reveal">This is the real thing, running in your browser. Grade the sample below, or
+        press <strong>Auto-develop</strong> and watch the engine set them for you.</p>
+    </div>
+
+    <div class="panel reveal">
+      <div class="panel-view">
+        <img class="panel-img" id="panelImg" src="./assets/frame.jpg" alt="Editable sample frame reflecting the current develop settings." />
+        <span class="panel-original" id="peek">Hold to see original</span>
+        <div class="panel-histogram" aria-hidden="true"><canvas id="histo"></canvas></div>
+      </div>
+      <div class="panel-rack" role="group" aria-label="Develop adjustments">
+        <div class="rack-top">
+          <span class="preset-pill" id="presetPill">RAW · unprocessed</span>
+          <div class="rack-btns">
+            <button class="mini" id="autoBtn" type="button">✦ Auto-develop</button>
+            <button class="mini mini-ghost" id="resetBtn" type="button">Reset</button>
+          </div>
+        </div>
+        <!-- sliders injected by JS for progressive enhancement; static fallback below -->
+        <div class="sliders" id="sliders">
+          <noscript><p class="nojs">Enable JavaScript to grade the sample frame interactively.</p></noscript>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="engine" class="engine">
+    <div class="section-head">
+      <p class="kicker reveal">[ How the engine sees ]</p>
+      <h2 class="reveal">It reads the exposure, not your presets.</h2>
+    </div>
+    <div class="engine-grid">
+      <article class="ecard reveal">
+        <span class="ecard-n">01</span>
+        <h3>Scene-referred, not display-referred</h3>
+        <p>Aperture Lab grades in the linear light your sensor actually recorded — highlights have room
+          to roll off instead of clipping to paper white. The photograph keeps its air.</p>
+      </article>
+      <article class="ecard reveal">
+        <span class="ecard-n">02</span>
+        <h3>Local, per-region intent</h3>
+        <p>A segmentation pass separates sky, skin and shadow so a lift in the foreground never bruises
+          the highlights behind it. Dodge and burn, decided for you, editable by you.</p>
+      </article>
+      <article class="ecard reveal">
+        <span class="ecard-n">03</span>
+        <h3>Grain that belongs to the frame</h3>
+        <p>Film grain is modelled per channel and per luminance, so it lives in the shadows the way silver
+          halide did — not a flat overlay stamped across the whole image.</p>
+      </article>
+    </div>
+
+    <div class="stats reveal" aria-label="Engine specifications">
+      <div class="stat"><span class="s-num" data-to="14.2" data-dec="1">0</span><span class="s-suf">stops</span><span class="s-lbl">dynamic range held</span></div>
+      <div class="stat"><span class="s-num" data-to="48" data-dec="0">0</span><span class="s-suf">MP</span><span class="s-lbl">develop resolution</span></div>
+      <div class="stat"><span class="s-num" data-to="9">0</span><span class="s-suf">ms</span><span class="s-lbl">per-frame inference</span></div>
+      <div class="stat"><span class="s-num" data-to="100" data-dec="0">0</span><span class="s-suf">%</span><span class="s-lbl">non-destructive</span></div>
+    </div>
+  </section>
+
+  <section id="looks" class="looks">
+    <div class="section-head">
+      <p class="kicker reveal">[ Looks ]</p>
+      <h2 class="reveal">Start from a photograph, not a filter.</h2>
+      <p class="lede reveal">Each look is a full develop recipe — tone curve, split-toning, grain and local
+        intent — that the engine adapts to your frame. Click one to apply it above.</p>
+    </div>
+    <div class="look-row" id="lookRow" role="listbox" aria-label="Develop looks"></div>
+  </section>
+
+  <section class="closer">
+    <p class="closer-line reveal">The negative was always <em>enough.</em></p>
+    <a class="btn btn-primary reveal" href="#develop">Develop your first frame</a>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="foot-top">
+    <span class="foot-brand">Aperture&nbsp;Lab</span>
+    <div class="foot-links">
+      <a href="#develop">Develop</a><a href="#engine">Engine</a><a href="#looks">Looks</a><a href="./guide/">Guide</a>
+    </div>
+  </div>
+  <div class="foot-bottom">
+    <span>© 2026 Aperture Lab — a design-showcase concept, not a shipping product.</span>
+    <span>Designed &amp; built by Fable · <a href="./guide/">How this was built →</a></span>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" defer></script>
+<script src="./main.js" defer></script>
+</body>
+</html>

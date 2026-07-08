@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>How Aperture Lab was built — the guide</title>
+<meta name="description" content="A walkthrough of Aperture Lab's signature techniques: the draggable RAW/developed reveal and the live CSS-filter develop rack." />
+<meta name="theme-color" content="#0a0a0b" />
+<meta name="color-scheme" content="dark" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter+Tight:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+:root{--stage:#0a0a0b;--ink:#f2ede4;--dim:#a8a196;--faint:#6e685e;--amber:#e8b06a;--line:rgba(242,237,228,.12);--max:760px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--stage);color:var(--ink);font-family:"Inter Tight",system-ui,sans-serif;line-height:1.62;-webkit-font-smoothing:antialiased}
+a{color:var(--amber);text-decoration:none}a:hover{text-decoration:underline}
+.wrap{max-width:var(--max);margin:0 auto;padding:clamp(28px,6vw,80px) clamp(18px,5vw,32px)}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:3rem;font-family:"JetBrains Mono",monospace;font-size:.74rem;letter-spacing:.1em;color:var(--dim)}
+.top a{color:var(--dim)}.top a:hover{color:var(--amber)}
+h1{font-family:"Fraunces",serif;font-weight:400;font-size:clamp(2.2rem,6vw,3.6rem);line-height:1.03;margin-bottom:.5rem;letter-spacing:-.01em}
+h1 em{color:var(--amber);font-style:italic}
+.sub{color:var(--dim);font-size:1.1rem;margin-bottom:3.2rem}
+h2{font-family:"Fraunces",serif;font-weight:500;font-size:clamp(1.5rem,3.6vw,2rem);margin:2.8rem 0 1rem;letter-spacing:-.01em}
+.ey{font-family:"JetBrains Mono",monospace;font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;color:var(--amber);display:block;margin-bottom:2.4rem}
+p{color:#d8d2c6;margin:1rem 0}
+strong{color:var(--ink);font-weight:600}
+ul{margin:1rem 0 1rem 1.1rem;color:#d8d2c6}li{margin:.4rem 0}
+pre{background:#111013;border:1px solid var(--line);border-radius:12px;padding:16px 18px;overflow-x:auto;margin:1.2rem 0;font-family:"JetBrains Mono",monospace;font-size:.82rem;line-height:1.65;color:#d8d2c6}
+code{font-family:"JetBrains Mono",monospace;font-size:.86em;color:var(--amber)}
+pre code{color:inherit}
+.rule{height:1px;background:var(--line);margin:3rem 0;border:0}
+.back{display:inline-block;margin-top:2.5rem;font-family:"JetBrains Mono",monospace;font-size:.8rem}
+figure{margin:1.6rem 0}figure img{width:100%;border-radius:12px;border:1px solid var(--line)}
+figcaption{font-family:"JetBrains Mono",monospace;font-size:.68rem;color:var(--faint);margin-top:.6rem;letter-spacing:.05em}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <a href="../">← Aperture Lab</a>
+    <span>THE GUIDE · how it was built</span>
+  </div>
+
+  <span class="ey">Design showcase · build notes</span>
+  <h1>Developing <em>light,</em> in a browser.</h1>
+  <p class="sub">Aperture Lab looks like a native darkroom app but it is one HTML file, one stylesheet
+    and one script — no framework, no build step. Two ideas carry the whole thing.</p>
+
+  <figure>
+    <img src="../assets/frame.jpg" alt="The sample frame used throughout the site." loading="lazy" />
+    <figcaption>The one frame the whole site develops. Generated, then compressed to a 3:2 JPEG.</figcaption>
+  </figure>
+
+  <h2>The idea</h2>
+  <p>A RAW editor sells one feeling: that a flat, lifeless capture already contains a finished photograph,
+    and the software just <em>finds</em> it. So the site had to let you feel that in the first five seconds —
+    before any copy — by dragging a seam across a single frame and watching it come alive. Everything else
+    (the develop rack, the looks, the specs) is proof that the feeling is real and controllable.</p>
+
+  <h2>The stack</h2>
+  <ul>
+    <li><strong>Plain HTML/CSS/JS.</strong> Chosen because the two signature effects are cheap in the
+      browser and a framework would only add weight to a page that is fundamentally one image and a few sliders.</li>
+    <li><strong>GSAP</strong> for one thing only: easing the "Auto-develop" slider animation. Everything else
+      is native <code>requestAnimationFrame</code> and CSS transitions.</li>
+    <li><strong>Fraunces / Inter&nbsp;Tight / JetBrains&nbsp;Mono</strong> — an optical serif for the
+      darkroom voice, a tight grotesque for UI, a mono for EXIF-style technical labels.</li>
+  </ul>
+
+  <h2>Signature technique #1 — the RAW/developed reveal</h2>
+  <p>The trick most people miss: <strong>RAW and "developed" are the same frame.</strong> In a real editor
+    you are not swapping two photos — you are grading one negative. So the site loads the graded image once,
+    stacks a second copy on top, and flattens <em>that</em> copy with a CSS filter to fake an un-graded RAW:</p>
+  <pre><code>.compare-raw .compare-img{
+  filter: saturate(.55) contrast(.82) brightness(1.08)
+          sepia(.06) hue-rotate(-8deg);   /* lifted, cool, flat */
+}</code></pre>
+  <p>The top (RAW) layer is then clipped to the drag position with a single animated property — no canvas,
+    no reflow:</p>
+  <pre><code>raw.style.clipPath = `inset(0 ${100 - pos}% 0 0)`;</code></pre>
+  <p>Pointer, touch and keyboard all drive the same <code>set(pos)</code> function, the handle is a real
+    <code>role="slider"</code> with arrow-key support, and a gentle sine drift animates the seam until the
+    first interaction — unless the visitor prefers reduced motion, in which case it sits still at 50%.</p>
+
+  <h2>Signature technique #2 — the live develop rack</h2>
+  <p>The develop panel is not a video or a mockup. Each slider writes into a state object, and one function
+    composes a CSS filter string applied to the sample frame on every input:</p>
+  <pre><code>brightness(1 + exposure/220 + shadows/520)
+contrast(1 + contrast/200 − shadows/720)
+saturate(1 + saturation/150)
+sepia(max(0,warmth)/240) hue-rotate(−warmth/11 deg)</code></pre>
+  <p>"Auto-develop" tweens the same state through GSAP so the sliders visibly move to their new values, and
+    each "Look" is just a saved state object. Press-and-hold on "original" swaps the filter back to the flat
+    RAW recipe — the same one the hero uses.</p>
+
+  <h2>Details that matter</h2>
+  <ul>
+    <li><strong>Grain is real.</strong> A 180×120 canvas of random luminance noise, re-rendered every ~80ms and
+      scaled up with <code>image-rendering:pixelated</code>. The Grain slider drives its opacity. Reduced motion → one static frame.</li>
+    <li><strong>Progressive enhancement.</strong> The <code>.js</code> class gates every reveal; with scripts off
+      the page is fully readable and the photo still shows.</li>
+    <li><strong>Honest histogram.</strong> The little RGB curve is illustrative — it shifts with exposure and
+      contrast so the panel feels instrumented, but it is drawn from the settings, not sampled from pixels.</li>
+  </ul>
+
+  <h2>Ship it on GitHub Pages</h2>
+  <p>Because every path is relative and there is no build, deploying is three commands:</p>
+  <pre><code>gh repo create aperture-lab --public --source . --push
+gh api --method POST /repos/USER/aperture-lab/pages \
+  -f 'source[branch]=main' -f 'source[path]=/'
+# live at https://USER.github.io/aperture-lab/ in ~1 min</code></pre>
+  <p>A <code>.nojekyll</code> file keeps Pages from touching the folder structure. That's the whole deploy.</p>
+
+  <hr class="rule" />
+  <p style="color:var(--faint);font-size:.9rem">Aperture Lab is a design-showcase concept — the develop engine is a
+    browser-side approximation, not a shipping RAW pipeline. See the repository README for the full demo-vs-real map.</p>
+  <a class="back" href="../">← Back to Aperture Lab</a>
+</div>
+</body>
+</html>
