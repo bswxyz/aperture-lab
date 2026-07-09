@@ -3,7 +3,7 @@
 **Live:** https://bswxyz.github.io/aperture-lab/ · **Build notes:** https://bswxyz.github.io/aperture-lab/guide/
 
 A computational-photography / AI-RAW-editor landing site with a working, browser-side develop
-experience — part of the [Fable 25 design showcase](https://bswxyz.github.io/fable-hub/).
+experience — part of the [Parable 25 design showcase](https://bswxyz.github.io/fable-hub/).
 
 ---
 
@@ -89,4 +89,4 @@ whole visual system.
 
 ## License
 
-[MIT](LICENSE). Design & build by **Fable** (Anthropic's Claude). The hero image is AI-generated.
+[MIT](LICENSE). Design & build by **Parable** (Anthropic's Claude). The hero image is AI-generated.
